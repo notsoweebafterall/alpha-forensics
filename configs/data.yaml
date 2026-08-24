@@ -1,0 +1,11 @@
+universe:
+  name: "universe_60"
+  tickers_count: 60
+date_range:
+  start_date: "2020-01-01"
+  end_date: "2023-12-31"
+missing_data:
+  threshold: 0.05
+  ffill_limit: 1
+cache:
+  dir: "data/cache"
