@@ -1,0 +1,1 @@
+{"candidate_id": "cross_sectional_momentum", "new_status": "INVALIDATED", "reason": "redundant with volatility_adjusted_momentum, corr=0.950 (>= 0.90)", "timestamp": "2026-08-28T17:35:51.032014"}

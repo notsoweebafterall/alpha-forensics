@@ -26,7 +26,7 @@ from validation.folds import WalkForwardConfig
 from validation.runner import run_walk_forward_validation
 from backtesting.config import BacktestConfig
 from backtesting.costs import CostModel
-from statistics import TrialRecord, log_trial, load_trial_log
+from statistics import TrialRecord, log_trial, load_trial_log, compute_distribution_stats, save_returns
 from .sector_map import SECTOR_MAP
 
 
@@ -49,6 +49,7 @@ def evaluate_generalization(
     backtest_config: BacktestConfig = BacktestConfig(),
     cost_model: CostModel = CostModel(),
     log_path: Union[str, Path] = "data/trial_log.jsonl",
+    store_path: Optional[Union[str, Path]] = None,
 ) -> GeneralizationResult:
     """
     Evaluates alpha candidate generalization across sector sub-universes and period half-splits.
@@ -105,8 +106,12 @@ def evaluate_generalization(
                 cost_model=cost_model,
             )
             oos_sh = float(val_res.oos_metrics.get("sharpe_ratio", 0.0))
+            sec_net_returns = val_res.oos_net_returns
+            sec_skew, sec_kurtosis, sec_t_len = compute_distribution_stats(sec_net_returns)
         except Exception:
             oos_sh = 0.0
+            sec_net_returns = None
+            sec_skew, sec_kurtosis, sec_t_len = None, None, None
 
         sector_sharpes[sec] = oos_sh
 
@@ -120,9 +125,15 @@ def evaluate_generalization(
                         oos_sharpe=oos_sh,
                         timestamp=now_str,
                         backfilled=False,
+                        skew=sec_skew,
+                        kurtosis=sec_kurtosis,
+                        track_record_length=sec_t_len,
                     ),
                     log_path=log_path,
                 )
+                if sec_net_returns is not None:
+                    target_store = store_path if store_path is not None else Path(log_path).parent / "trial_returns.parquet"
+                    save_returns(var_id, sec_net_returns, store_path=target_store)
                 existing_ids.add(var_id)
             except ValueError:
                 pass
@@ -174,8 +185,12 @@ def evaluate_generalization(
             cost_model=cost_model,
         )
         h1_sharpe = float(val_h1.oos_metrics.get("sharpe_ratio", 0.0))
+        h1_net_returns = val_h1.oos_net_returns
+        h1_skew, h1_kurtosis, h1_t_len = compute_distribution_stats(h1_net_returns)
     except Exception:
         h1_sharpe = 0.0
+        h1_net_returns = None
+        h1_skew, h1_kurtosis, h1_t_len = None, None, None
 
     if h1_var_id not in existing_ids:
         try:
@@ -186,9 +201,15 @@ def evaluate_generalization(
                     oos_sharpe=h1_sharpe,
                     timestamp=now_str,
                     backfilled=False,
+                    skew=h1_skew,
+                    kurtosis=h1_kurtosis,
+                    track_record_length=h1_t_len,
                 ),
                 log_path=log_path,
             )
+            if h1_net_returns is not None:
+                target_store = store_path if store_path is not None else Path(log_path).parent / "trial_returns.parquet"
+                save_returns(h1_var_id, h1_net_returns, store_path=target_store)
             existing_ids.add(h1_var_id)
         except ValueError:
             pass
@@ -212,8 +233,12 @@ def evaluate_generalization(
             cost_model=cost_model,
         )
         h2_sharpe = float(val_h2.oos_metrics.get("sharpe_ratio", 0.0))
+        h2_net_returns = val_h2.oos_net_returns
+        h2_skew, h2_kurtosis, h2_t_len = compute_distribution_stats(h2_net_returns)
     except Exception:
         h2_sharpe = 0.0
+        h2_net_returns = None
+        h2_skew, h2_kurtosis, h2_t_len = None, None, None
 
     if h2_var_id not in existing_ids:
         try:
@@ -224,9 +249,15 @@ def evaluate_generalization(
                     oos_sharpe=h2_sharpe,
                     timestamp=now_str,
                     backfilled=False,
+                    skew=h2_skew,
+                    kurtosis=h2_kurtosis,
+                    track_record_length=h2_t_len,
                 ),
                 log_path=log_path,
             )
+            if h2_net_returns is not None:
+                target_store = store_path if store_path is not None else Path(log_path).parent / "trial_returns.parquet"
+                save_returns(h2_var_id, h2_net_returns, store_path=target_store)
             existing_ids.add(h2_var_id)
         except ValueError:
             pass

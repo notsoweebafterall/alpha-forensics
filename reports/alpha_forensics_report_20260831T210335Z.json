@@ -1,0 +1,105 @@
+{
+  "timestamp": "20260831T210335Z",
+  "funnel": {
+    "total_logged": 36,
+    "valid_all": 35,
+    "valid_top_level_non_redundant": 8,
+    "with_returns": 2,
+    "survives_dsr": 0,
+    "fails_dsr": 1,
+    "not_dsr_evaluated": 1
+  },
+  "portfolio": {
+    "rigorous_eligible_count": 0,
+    "rigorous_message": "Stage 3 filter (dsr_verdict == 'survives_dsr') yielded 0 eligible candidates. Empty portfolio returned.",
+    "relaxed_eligible_count": 2,
+    "relaxed_equal_weight_sharpe": -1.5855407805949784,
+    "relaxed_inverse_vol_sharpe": -1.402283383849897,
+    "relaxed_constituents": [
+      "volatility_adjusted_momentum",
+      "cross_sectional_momentum__param_lookback_20"
+    ],
+    "relaxed_equal_weights": {
+      "volatility_adjusted_momentum": 0.5,
+      "cross_sectional_momentum__param_lookback_20": 0.5
+    },
+    "relaxed_inverse_vol_weights": {
+      "volatility_adjusted_momentum": 0.5743470928140466,
+      "cross_sectional_momentum__param_lookback_20": 0.4256529071859535
+    }
+  },
+  "top_candidates": [
+    {
+      "candidate_id": "volatility_adjusted_momentum__param_lookback_60_window_60",
+      "phase": "Phase 9 Parameter Landscape",
+      "oos_sharpe": -0.005459289590853663,
+      "effective_status": "VALID",
+      "dsr_verdict": null,
+      "redundant_with": null
+    },
+    {
+      "candidate_id": "volatility_adjusted_momentum",
+      "phase": "Phase 9 Parameter Landscape",
+      "oos_sharpe": -0.1098617079448491,
+      "effective_status": "VALID",
+      "dsr_verdict": "fails_dsr",
+      "redundant_with": null
+    },
+    {
+      "candidate_id": "cross_sectional_momentum",
+      "phase": "Phase 7 Walk-Forward Validation",
+      "oos_sharpe": -0.3161383177268906,
+      "effective_status": "INVALIDATED",
+      "dsr_verdict": null,
+      "redundant_with": null
+    },
+    {
+      "candidate_id": "cross_sectional_momentum__param_lookback_126",
+      "phase": "Phase 9 Parameter Landscape",
+      "oos_sharpe": -0.33245468925152755,
+      "effective_status": "VALID",
+      "dsr_verdict": null,
+      "redundant_with": null
+    },
+    {
+      "candidate_id": "volatility_adjusted_momentum__param_lookback_126_window_60",
+      "phase": "Phase 9 Parameter Landscape",
+      "oos_sharpe": -0.49683798918613614,
+      "effective_status": "VALID",
+      "dsr_verdict": null,
+      "redundant_with": null
+    },
+    {
+      "candidate_id": "volatility_adjusted_momentum__param_lookback_126_window_20",
+      "phase": "Phase 9 Parameter Landscape",
+      "oos_sharpe": -0.6560689992313151,
+      "effective_status": "VALID",
+      "dsr_verdict": null,
+      "redundant_with": null
+    },
+    {
+      "candidate_id": "low_volatility",
+      "phase": "Phase 7 Walk-Forward Validation",
+      "oos_sharpe": -1.7343761728264406,
+      "effective_status": "VALID",
+      "dsr_verdict": null,
+      "redundant_with": null
+    },
+    {
+      "candidate_id": "cross_sectional_momentum__param_lookback_20",
+      "phase": "Phase 9 Parameter Landscape",
+      "oos_sharpe": -2.2984426529367883,
+      "effective_status": "VALID",
+      "dsr_verdict": null,
+      "redundant_with": null
+    },
+    {
+      "candidate_id": "volume_momentum_combo",
+      "phase": "Phase 7 Walk-Forward Validation",
+      "oos_sharpe": -2.9350749667500637,
+      "effective_status": "VALID",
+      "dsr_verdict": null,
+      "redundant_with": null
+    }
+  ]
+}

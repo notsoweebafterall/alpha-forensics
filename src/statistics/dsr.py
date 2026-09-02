@@ -28,9 +28,12 @@ What DSR Does NOT Protect Against:
     - Overfitting within parameter landscapes when parameter tuning is unconstrained (Phase 9).
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
+from datetime import datetime
+import json
 import math
-from typing import List, Optional
+from pathlib import Path
+from typing import Dict, List, Optional, Union
 import scipy.stats as stats
 
 # Euler-Mascheroni constant
@@ -164,3 +167,81 @@ class DSRResult:
             verdict=verdict,
             caveats=caveats,
         )
+
+
+@dataclass
+class DSRLogRecord:
+    candidate_id: str
+    dsr_score: float
+    verdict: str
+    n_trials: int
+    timestamp: str
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "DSRLogRecord":
+        return cls(
+            candidate_id=str(data["candidate_id"]),
+            dsr_score=float(data["dsr_score"]),
+            verdict=str(data["verdict"]),
+            n_trials=int(data["n_trials"]),
+            timestamp=str(data["timestamp"]),
+        )
+
+
+def log_dsr_result(
+    dsr_res: DSRResult,
+    log_path: Union[str, Path] = "data/dsr_results.jsonl",
+) -> None:
+    """
+    Appends a DSR verdict record to the persistent dsr_results.jsonl log.
+
+    Append-only discipline:
+        A candidate's DSR verdict can change over time as total trial count N grows.
+        This writes a chronological event log of DSR verdicts over time. Rebuilding
+        the registry uses the most recent entry per candidate_id.
+    """
+    path = Path(log_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    rec = DSRLogRecord(
+        candidate_id=dsr_res.candidate_id,
+        dsr_score=float(dsr_res.dsr),
+        verdict=str(dsr_res.verdict),
+        n_trials=int(dsr_res.n_trials),
+        timestamp=datetime.now().isoformat(),
+    )
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(rec.to_dict()) + "\n")
+
+
+def load_dsr_log(
+    log_path: Union[str, Path] = "data/dsr_results.jsonl",
+) -> List[DSRLogRecord]:
+    """Loads all DSRLogRecord entries from the jsonl file."""
+    path = Path(log_path)
+    if not path.exists():
+        return []
+    records: List[DSRLogRecord] = []
+    with path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                records.append(DSRLogRecord.from_dict(json.loads(line)))
+            except (json.JSONDecodeError, KeyError):
+                continue
+    return records
+
+
+def load_latest_dsr_verdicts(
+    log_path: Union[str, Path] = "data/dsr_results.jsonl",
+) -> Dict[str, DSRLogRecord]:
+    """Loads a mapping of candidate_id -> most recent DSRLogRecord."""
+    records = load_dsr_log(log_path=log_path)
+    latest: Dict[str, DSRLogRecord] = {}
+    for r in records:
+        latest[r.candidate_id] = r
+    return latest

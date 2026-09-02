@@ -45,20 +45,34 @@ def test_trial_count_matches_backfill():
     with tempfile.TemporaryDirectory() as tmpdir:
         log_file = Path(tmpdir) / "trial_log.jsonl"
 
-        backfilled = backfill_from_phase_artifacts(log_path=log_file)
+        # There is no synthetic default anymore (see trial_log.py docstring) --
+        # this test supplies its own explicit fixture records to verify the
+        # backfill/dedup plumbing itself, independent of any real phase output.
+        fixture_records = [
+            TrialRecord(candidate_id="fixture_a", phase="Phase 4", oos_sharpe=0.31, timestamp="2026-08-24T12:00:00"),
+            TrialRecord(candidate_id="fixture_b", phase="Phase 6", oos_sharpe=0.18, timestamp="2026-08-24T12:00:00"),
+            TrialRecord(candidate_id="fixture_c", phase="Phase 9", oos_sharpe=0.44, timestamp="2026-08-24T12:00:00"),
+        ]
+
+        backfilled = backfill_from_phase_artifacts(fixture_records, log_path=log_file)
         n = trial_count(log_file)
 
-        assert n == len(backfilled)
+        assert n == len(backfilled) == len(fixture_records)
         assert n > 0
 
         # Check all backfilled records have backfilled=True
         records = load_trial_log(log_file)
         assert all(r.backfilled for r in records)
 
-        # Backfilling again does not duplicate records
-        backfilled_again = backfill_from_phase_artifacts(log_path=log_file)
+        # Backfilling the same records again does not duplicate them
+        backfilled_again = backfill_from_phase_artifacts(fixture_records, log_path=log_file)
         assert len(backfilled_again) == 0
         assert trial_count(log_file) == n
+
+        # Calling with an empty list is rejected rather than silently
+        # falling back to synthetic data
+        with pytest.raises(ValueError, match="non-empty list"):
+            backfill_from_phase_artifacts([], log_path=log_file)
 
 
 def test_expected_max_sharpe_increases_with_n():

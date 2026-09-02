@@ -35,6 +35,8 @@ from validation.folds import WalkForwardConfig
 from .config import BacktestConfig
 from .costs import CostModel
 
+from statistics.distribution_stats import compute_distribution_stats
+
 STANDARD_COST_GRID: List[float] = [0.0, 5.0, 10.0, 25.0, 50.0]
 REALISTIC_COST_BPS: float = 10.0
 
@@ -47,6 +49,10 @@ class CostSensitivityResult:
     oos_annualized_return_by_cost: Dict[float, float]
     breakeven_cost_bps: Optional[float]
     survives_realistic_costs: bool
+    realistic_cost_skew: Optional[float] = None
+    realistic_cost_kurtosis: Optional[float] = None
+    realistic_cost_track_record_length: Optional[int] = None
+    realistic_cost_returns: Optional[pd.Series] = None
 
 
 def run_cost_sensitivity(
@@ -97,6 +103,10 @@ def run_cost_sensitivity(
 
     oos_sharpe_by_cost: Dict[float, float] = {}
     oos_ann_ret_by_cost: Dict[float, float] = {}
+    realistic_skew: Optional[float] = None
+    realistic_kurtosis: Optional[float] = None
+    realistic_t_len: Optional[int] = None
+    realistic_net_returns: Optional[pd.Series] = None
 
     # Derivation across cost grid via pure series arithmetic
     for bps in cost_grid:
@@ -112,6 +122,10 @@ def run_cost_sensitivity(
 
         oos_sharpe_by_cost[bps] = float(sharpe)
         oos_ann_ret_by_cost[bps] = float(ann_ret)
+
+        if bps == REALISTIC_COST_BPS:
+            realistic_skew, realistic_kurtosis, realistic_t_len = compute_distribution_stats(net_rets)
+            realistic_net_returns = net_rets
 
     # Compute breakeven cost bps (annualized return 0-crossing approximation)
     breakeven: Optional[float] = None
@@ -146,4 +160,8 @@ def run_cost_sensitivity(
         oos_annualized_return_by_cost=oos_ann_ret_by_cost,
         breakeven_cost_bps=breakeven,
         survives_realistic_costs=survives,
+        realistic_cost_skew=realistic_skew,
+        realistic_cost_kurtosis=realistic_kurtosis,
+        realistic_cost_track_record_length=realistic_t_len,
+        realistic_cost_returns=realistic_net_returns,
     )

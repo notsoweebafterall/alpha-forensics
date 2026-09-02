@@ -1,0 +1,120 @@
+{
+  "timestamp": "20260901T132144Z",
+  "funnel": {
+    "total_logged": 36,
+    "valid_all": 34,
+    "valid_top_level_non_redundant": 7,
+    "with_returns": 7,
+    "survives_dsr": 0,
+    "fails_dsr": 1,
+    "not_dsr_evaluated": 6
+  },
+  "portfolio": {
+    "rigorous_eligible_count": 0,
+    "rigorous_message": "Stage 3 filter (dsr_verdict == 'survives_dsr') yielded 0 eligible candidates. Empty portfolio returned.",
+    "relaxed_eligible_count": 7,
+    "relaxed_equal_weight_sharpe": -4.5290475058486015,
+    "relaxed_inverse_vol_sharpe": 0.0,
+    "relaxed_constituents": [
+      "cross_sectional_momentum__param_lookback_126",
+      "volatility_adjusted_momentum__param_lookback_126_window_20",
+      "volatility_adjusted_momentum__param_lookback_126_window_60",
+      "low_volatility",
+      "volatility_adjusted_momentum",
+      "cross_sectional_momentum__param_lookback_20",
+      "volume_momentum_combo"
+    ],
+    "relaxed_equal_weights": {
+      "cross_sectional_momentum__param_lookback_126": 0.14285714285714285,
+      "volatility_adjusted_momentum__param_lookback_126_window_20": 0.14285714285714285,
+      "volatility_adjusted_momentum__param_lookback_126_window_60": 0.14285714285714285,
+      "low_volatility": 0.14285714285714285,
+      "volatility_adjusted_momentum": 0.14285714285714285,
+      "cross_sectional_momentum__param_lookback_20": 0.14285714285714285,
+      "volume_momentum_combo": 0.14285714285714285
+    },
+    "relaxed_inverse_vol_weights": {
+      "cross_sectional_momentum__param_lookback_126": 0.33332812711352156,
+      "volatility_adjusted_momentum__param_lookback_126_window_20": 0.33332812711352156,
+      "volatility_adjusted_momentum__param_lookback_126_window_60": 0.33332812711352156,
+      "low_volatility": 3.584024127348704e-06,
+      "volatility_adjusted_momentum": 4.938298610359148e-06,
+      "cross_sectional_momentum__param_lookback_20": 3.556598758746189e-06,
+      "volume_momentum_combo": 3.53973793884487e-06
+    }
+  },
+  "top_candidates": [
+    {
+      "candidate_id": "cross_sectional_momentum__param_lookback_126",
+      "phase": "Phase 9 Parameter Landscape",
+      "oos_sharpe": 0.0,
+      "effective_status": "VALID",
+      "dsr_verdict": null,
+      "redundant_with": null
+    },
+    {
+      "candidate_id": "volatility_adjusted_momentum__param_lookback_126_window_20",
+      "phase": "Phase 9 Parameter Landscape",
+      "oos_sharpe": 0.0,
+      "effective_status": "VALID",
+      "dsr_verdict": null,
+      "redundant_with": null
+    },
+    {
+      "candidate_id": "volatility_adjusted_momentum__param_lookback_126_window_60",
+      "phase": "Phase 9 Parameter Landscape",
+      "oos_sharpe": 0.0,
+      "effective_status": "VALID",
+      "dsr_verdict": null,
+      "redundant_with": null
+    },
+    {
+      "candidate_id": "low_volatility",
+      "phase": "Phase 7 Walk-Forward Validation",
+      "oos_sharpe": -0.11669182975494971,
+      "effective_status": "VALID",
+      "dsr_verdict": null,
+      "redundant_with": null
+    },
+    {
+      "candidate_id": "volatility_adjusted_momentum",
+      "phase": "Phase 9 Parameter Landscape",
+      "oos_sharpe": -0.7089624866684415,
+      "effective_status": "VALID",
+      "dsr_verdict": "fails_dsr",
+      "redundant_with": null
+    },
+    {
+      "candidate_id": "cross_sectional_momentum__param_lookback_20",
+      "phase": "Phase 9 Parameter Landscape",
+      "oos_sharpe": -0.7284874460698335,
+      "effective_status": "VALID",
+      "dsr_verdict": null,
+      "redundant_with": null
+    },
+    {
+      "candidate_id": "volatility_adjusted_momentum__param_lookback_60_window_60",
+      "phase": "Phase 9 Parameter Landscape",
+      "oos_sharpe": -0.9952243861497682,
+      "effective_status": "INVALIDATED",
+      "dsr_verdict": null,
+      "redundant_with": "volatility_adjusted_momentum"
+    },
+    {
+      "candidate_id": "cross_sectional_momentum",
+      "phase": "Phase 7 Walk-Forward Validation",
+      "oos_sharpe": -1.1907372463026094,
+      "effective_status": "INVALIDATED",
+      "dsr_verdict": "fails_dsr",
+      "redundant_with": "volatility_adjusted_momentum"
+    },
+    {
+      "candidate_id": "volume_momentum_combo",
+      "phase": "Phase 7 Walk-Forward Validation",
+      "oos_sharpe": -8.554297866225413,
+      "effective_status": "VALID",
+      "dsr_verdict": null,
+      "redundant_with": null
+    }
+  ]
+}

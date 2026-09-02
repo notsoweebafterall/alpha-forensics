@@ -28,6 +28,7 @@ class ValidationResult:
     degradation: Dict[str, Any]
     oos_gross_returns: Optional[pd.Series] = None
     oos_turnover: Optional[pd.Series] = None
+    oos_net_returns: Optional[pd.Series] = None
 
 
 def run_walk_forward_validation(
@@ -130,4 +131,5 @@ def run_walk_forward_validation(
         degradation=degradation,
         oos_gross_returns=oos_metrics.get("oos_gross_returns"),
         oos_turnover=oos_metrics.get("oos_turnover"),
+        oos_net_returns=oos_metrics.get("oos_net_returns"),
     )

@@ -126,5 +126,6 @@ def evaluate_oos(
         **econ,
         **pred,
         "oos_gross_returns": res.gross_returns,
+        "oos_net_returns": res.net_returns,
         "oos_turnover": res.turnover,
     }

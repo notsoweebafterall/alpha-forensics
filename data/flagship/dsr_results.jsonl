@@ -1,0 +1,3 @@
+{"candidate_id": "cross_sectional_momentum", "dsr_score": 0.0, "verdict": "fails_dsr", "n_trials": 12, "timestamp": "2026-09-01T18:47:34.957960"}
+{"candidate_id": "volatility_adjusted_momentum", "dsr_score": 0.0, "verdict": "fails_dsr", "n_trials": 12, "timestamp": "2026-09-01T18:47:34.963131"}
+{"candidate_id": "volatility_adjusted_momentum", "dsr_score": 0.0, "verdict": "fails_dsr", "n_trials": 34, "timestamp": "2026-09-02T00:15:19.595463"}

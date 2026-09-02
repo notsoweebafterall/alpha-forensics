@@ -19,6 +19,7 @@ Data-Hygiene Design:
 
 import sys
 from pathlib import Path
+from typing import Optional, Union
 import pandas as pd
 import numpy as np
 
@@ -28,6 +29,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from data.universe import UNIVERSE_60
 from data.panel import build_panel
 from alpha.strategies.registry import get_strategy
+from alpha.strategies import build_candidate_id
 from backtesting.config import BacktestConfig
 from backtesting.costs import CostModel
 from validation.folds import WalkForwardConfig
@@ -42,51 +44,50 @@ from factors import (
 )
 
 
-def _create_synthetic_panel(start_date: str, end_date: str):
+def _create_synthetic_panel(start_date: str, end_date: str, tickers: list[str]):
     dates = pd.date_range(start_date, periods=800, freq="B")
     np.random.seed(42)
-    p_df = pd.DataFrame(100.0 + np.random.randn(len(dates), 60).cumsum(axis=0), index=dates, columns=UNIVERSE_60)
-    v_df = pd.DataFrame(10000 + np.random.randint(0, 5000, size=(len(dates), 60)), index=dates, columns=UNIVERSE_60)
-    return build_panel(tickers=UNIVERSE_60, start_date=dates[0], end_date=dates[-1], prices_df=p_df, volume_df=v_df)
+    p_df = pd.DataFrame(100.0 + np.random.randn(len(dates), len(tickers)).cumsum(axis=0), index=dates, columns=tickers)
+    v_df = pd.DataFrame(10000 + np.random.randint(0, 5000, size=(len(dates), len(tickers))), index=dates, columns=tickers)
+    return build_panel(tickers=tickers, start_date=dates[0], end_date=dates[-1], prices_df=p_df, volume_df=v_df)
 
 
-def run_demo():
+def run_demo(
+    tickers: Optional[list[str]] = None,
+    start_date: str = "2020-01-01",
+    end_date: str = "2023-12-31",
+    log_path: Union[str, Path] = "data/trial_log.jsonl",
+    store_path: Union[str, Path] = "data/trial_returns.parquet",
+    cache_dir: Union[str, Path] = "data/cache",
+) -> None:
     print("=" * 100, flush=True)
     print("ALPHA FORENSICS — PHASE 11 FACTOR EXPOSURE & GENERALIZATION DEMO", flush=True)
     print("=" * 100, flush=True)
     print("Self-Constructed Factor Model (MKT, MOM, VOL, SECTOR) & Cross-Subuniverse Testing", flush=True)
     print("-" * 100, flush=True)
 
-    # Reset the OOS access log so the demo is cleanly re-runnable in the same process
     reset_oos_access_log()
+    log_path = Path(log_path)
+    store_path = Path(store_path)
+    cache_dir = Path(cache_dir)
+    target_tickers = UNIVERSE_60 if tickers is None else tickers
 
-    # 1. Load trial log ledger to pull Phase 9 candidate IDs and their recorded OOS Sharpes
-    log_path = Path("data/trial_log.jsonl")
     trial_records = load_trial_log(log_path)
     trial_dict = {r.candidate_id: r for r in trial_records}
 
-    # 2. Load real 60-ticker Panel
-    start_date = "2020-01-01"
-    end_date = "2023-12-31"
-    cache_prices = Path("data/cache/prices.parquet")
-
-    if cache_prices.exists():
-        print(f"Loading 60-ticker Panel from cache [{start_date} to {end_date}]...", flush=True)
-        try:
-            panel = build_panel(
-                tickers=UNIVERSE_60,
-                start_date=start_date,
-                end_date=end_date,
-                missing_threshold=0.05,
-                cache_dir="data/cache",
-            )
-            print(f"Loaded Panel successfully! Dates: {len(panel.prices)}, Tickers: {len(panel.universe)}", flush=True)
-        except Exception as e:
-            print(f"Warning: Error loading cache ({e}). Creating synthetic demo panel...", flush=True)
-            panel = _create_synthetic_panel(start_date, end_date)
-    else:
-        print("Cache not found. Creating synthetic demo panel for instant demo execution...", flush=True)
-        panel = _create_synthetic_panel(start_date, end_date)
+    print(f"Loading {len(target_tickers)}-ticker Panel [{start_date} to {end_date}]...", flush=True)
+    try:
+        panel = build_panel(
+            tickers=target_tickers,
+            start_date=start_date,
+            end_date=end_date,
+            missing_threshold=0.05,
+            cache_dir=cache_dir,
+        )
+        print(f"Loaded Panel successfully! Dates: {len(panel.prices)}, Tickers: {len(panel.universe)}", flush=True)
+    except Exception as e:
+        print(f"Warning: Could not fetch live data ({e}). Creating synthetic demo panel...", flush=True)
+        panel = _create_synthetic_panel(start_date, end_date, target_tickers)
 
     # 3. Split panel into dev and OOS holdout FIRST, then build FactorPanel from OOS sub-panel only.
     oos_fraction = 0.15
@@ -115,23 +116,32 @@ def run_demo():
         embargo_days=10,
     )
 
-    # 4. Phase 9 candidate variants pulled directly from trial log / Phase 9 artifacts
+    # 4. Phase 9 candidate variants -- IDs are derived via the same canonical
+    #    build_candidate_id() used everywhere else, from REAL parameter names/values
+    #    that actually exist in each strategy's variant_params grid (see
+    #    alpha.strategies.library). No candidate_id is hand-typed here anymore --
+    #    a hand-typed ID using invented parameter names ("vol_lookback"/"target",
+    #    which appear nowhere in this strategy's real grid) was exactly how a
+    #    fabricated candidate got treated as real in a previous version of this file.
     candidates_to_test = [
         {
-            "candidate_id": "cross_sectional_momentum__param_lookback_days_20",
             "strat_name": "cross_sectional_momentum",
             "params": {"lookback": 20},
             "sectors": ["Technology", "Financials", "Healthcare", "Consumer Discretionary"],
-            "note": "Phase 9 Candidate Variant (lookback=20)",
         },
         {
-            "candidate_id": "volatility_adjusted_momentum__param_vol_lookback_20_target_0.15",
             "strat_name": "volatility_adjusted_momentum",
-            "params": {"lookback": 20, "window": 20},
+            "params": {"lookback": 60, "window": 20},
             "sectors": ["Technology", "Financials", "Healthcare", "Consumer Discretionary"],
-            "note": "Phase 9 Candidate Variant (lookback=20, window=20)",
         },
     ]
+    for item in candidates_to_test:
+        item["strat"] = get_strategy(item["strat_name"])
+        item["candidate_id"] = (
+            build_candidate_id(item["strat_name"])
+            if item["params"] == item["strat"].default_params
+            else build_candidate_id(item["strat_name"], params=item["params"])
+        )
 
     print("\n" + "=" * 100, flush=True)
     print("1. FACTOR EXPOSURE OLS REGRESSION (HAC-ROBUST NEWEY-WEST STANDARD ERRORS)", flush=True)
@@ -178,8 +188,13 @@ def run_demo():
         print(f"Guarded OOS Date Window : {oos_candidate_returns.index[0].strftime('%Y-%m-%d')} "
               f"to {oos_candidate_returns.index[-1].strftime('%Y-%m-%d')} "
               f"({len(oos_candidate_returns)} days)", flush=True)
-        print(f"Phase 9/10 Trial Sharpe : {phase910_oos_sharpe:.4f}  "
-              f"<-- Reproduced directly from trial_log.jsonl ledger for candidate variant", flush=True)
+        if logged_rec is not None:
+            print(f"Phase 9/10 Trial Sharpe : {phase910_oos_sharpe:.4f}  "
+                  f"<-- Reproduced directly from trial_log.jsonl ledger for candidate variant", flush=True)
+        else:
+            print(f"Phase 9/10 Trial Sharpe : N/A -- no matching entry for '{cid}' exists in "
+                  f"trial_log.jsonl yet. Run the Phase 9 parameter robustness demo first if you "
+                  f"expect this candidate to have a prior ledger entry.", flush=True)
         print(f"Regression Raw Sharpe   : {reg_res.raw_sharpe:.4f}  "
               f"<-- Evaluated on OOS net returns aligned to factor date window", flush=True)
         print(f"Residual Strategy Sharpe: {reg_res.residual_sharpe:.4f}", flush=True)
@@ -210,6 +225,8 @@ def run_demo():
             wf_config=wf_config,
             backtest_config=config,
             cost_model=cost_model,
+            log_path=log_path,
+            store_path=store_path,
         )
 
         print(f"\n--- Strategy Candidate ID: [{cid}] ---", flush=True)
@@ -225,7 +242,8 @@ def run_demo():
     print("\n" + "=" * 100, flush=True)
     print("SUMMARY CONCLUSION:", flush=True)
     print("Self-constructed factor regression and generalization analysis successfully evaluate candidate variants", flush=True)
-    print("pulled directly from Phase 9/10 trial records, preserving exact candidate identity and single-look integrity.", flush=True)
+    print("using real, in-grid strategy parameters and canonically-derived candidate IDs, with any prior", flush=True)
+    print("Phase 9/10 ledger Sharpe shown only when an actual matching entry exists.", flush=True)
     print("=" * 100, flush=True)
 
 

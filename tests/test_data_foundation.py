@@ -127,7 +127,30 @@ def test_missing_data_threshold_trigger(synthetic_data):
             missing_threshold=0.05,  # 5% max allowed
             prices_df=corrupted_prices,
             volume_df=volume_df,
+            drop_invalid_tickers=False,
         )
+
+
+def test_missing_data_drop_invalid_tickers(synthetic_data):
+    prices_df, volume_df, tickers, dates = synthetic_data
+
+    # Introduce 20% missing data in AAPL (2 out of 10 dates)
+    corrupted_prices = prices_df.copy()
+    corrupted_prices.iloc[2, 0] = np.nan
+    corrupted_prices.iloc[3, 0] = np.nan
+
+    # Default drop_invalid_tickers=True drops AAPL and continues with MSFT, GOOGL
+    panel = build_panel(
+        tickers=tickers,
+        start_date=dates[0],
+        end_date=dates[-1],
+        missing_threshold=0.05,
+        prices_df=corrupted_prices,
+        volume_df=volume_df,
+    )
+    assert "AAPL" not in panel.universe
+    assert "MSFT" in panel.universe
+    assert "GOOGL" in panel.universe
 
 
 def test_missing_data_ffill_single_gap(synthetic_data):
