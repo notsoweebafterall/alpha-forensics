@@ -1,0 +1,74 @@
+{
+  "round_number": 1,
+  "timestamp": "2026-09-03T16:04:46.904937",
+  "num_requested": 8,
+  "history_summary": "Historical Trial Summary (Total Trials Logged: 86, Active Effective: 86):\n\nTop Evaluated Candidates & Outcomes:\n  - ID: volatility_adjusted_momentum__sector_Healthcare | Phase: Phase 11 Generalization Sector      | OOS Sharpe:  1.6667 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: cross_sectional_momentum__param_lookback_20__sector_Industrials | Phase: Phase 11 Generalization Sector      | OOS Sharpe:  1.5757 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: generated_ea0f73165f4c                   | Phase: Phase 6->7 Compositional Validation | OOS Sharpe:  1.5312 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: generated_52509e154753                   | Phase: Phase 6->7 Compositional Validation | OOS Sharpe:  1.5064 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: generated_52509e154753__cost_10bps       | Phase: Phase 8 Cost Sensitivity            | OOS Sharpe:  1.3927 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: generated_ea0f73165f4c__cost_10bps       | Phase: Phase 8 Cost Sensitivity            | OOS Sharpe:  1.2103 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: cross_sectional_momentum__param_lookback_20__period_h1 | Phase: Phase 11 Generalization Period H1   | OOS Sharpe:  0.7050 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: cross_sectional_momentum__param_lookback_20__sector_Energy | Phase: Phase 11 Generalization Sector      | OOS Sharpe:  0.6348 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: volatility_adjusted_momentum__sector_Consumer Staples | Phase: Phase 11 Generalization Sector      | OOS Sharpe:  0.5377 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: volatility_adjusted_momentum__period_h1  | Phase: Phase 11 Generalization Period H1   | OOS Sharpe:  0.4905 | DSR=0.0000 (fails_dsr) | Status: VALID\n\nKey Research Directives:\n  - Pure momentum (PriceReturn/Momentum) often fails DSR or factor tests when unadjusted.\n  - RealizedVolatility long-high-vol candidates load heavily on the VOL factor.\n  - Search for non-linear combinations (VolumeChange, Turnover, Drawdown, ZScore, Rank) with robust risk controls.",
+  "accepted_proposals": [
+    {
+      "proposal_id": "proposal_001",
+      "expression_string": "Rank(Multiply(Momentum(20), VolumeChange(5)))",
+      "canonical_hash": "5b62fb9fd524206f47d260e39f26854b7893e1c8a5f063943711673cd64ff5ff",
+      "rationale": "Ranks stocks by the product of 20\u2011day cumulative return and recent volume surge, aiming to capture high\u2011conviction moves supported by strong buying pressure.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_002",
+      "expression_string": "ZScore(Divide(RollingMean(20), RealizedVolatility(20)))",
+      "canonical_hash": "b299a010248079ca019e954f0457d34546d82a031c31395e3544ac11c6f8cf1e",
+      "rationale": "Standardizes the risk\u2011adjusted return (average return over volatility) across the cross\u2011section, isolating securities delivering superior return per unit of recent volatility.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_003",
+      "expression_string": "Subtract(Rank(PriceReturn(1)), Rank(PriceReturn(5)))",
+      "canonical_hash": "af53e5b577dcadb81a034a0c1ea2676394d6b1d19f0f17ff3bbda6fb3c43b2d7",
+      "rationale": "Measures the change in short\u2011term ranking between 1\u2011day and 5\u2011day returns, hypothesizing that stocks climbing in rank exhibit momentum continuation, while those falling may indicate reversal opportunities.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_004",
+      "expression_string": "Multiply(Rank(Negate(Drawdown(20))), ZScore(Turnover(20)))",
+      "canonical_hash": "68e9f09c1e4e44ad36dd242891dcfd5d0cd934023698aa41c2334668037a1f56",
+      "rationale": "Ranks stocks by the magnitude of recent drawdown (negated to make larger drawdowns higher) and multiplies by cross\u2011sectional turnover, targeting heavily traded securities that have recently recovered from price depressions.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_005",
+      "expression_string": "SignedPower(RollingZScore(10), 0.5)",
+      "canonical_hash": "8ff500d96968f1cb155f97517818e85836e0156f2c93f66316905b6fef4e1aec",
+      "rationale": "Applies a square\u2011root signed power to the 10\u2011day Z\u2011score of returns, compressing extreme values while preserving sign, which can enhance signal stability for mean\u2011reversion strategies.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_006",
+      "expression_string": "Divide(Add(Momentum(60), Lag(Momentum(60), 5)), Add(RealizedVolatility(60), Lag(RealizedVolatility(60), 5)))",
+      "canonical_hash": "c94423851b674727b8a82e16a2b376203c367fd03e2eedd510fc900ea889c5ef",
+      "rationale": "Creates a smoothed momentum\u2011to\u2011volatility ratio by averaging current and 5\u2011day\u2011lagged momentum and volatility, hypothesizing that persistent high momentum relative to recent volatility signals durable alpha.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_007",
+      "expression_string": "Multiply(Rank(Abs(Diff(PriceReturn(1), 1))), ZScore(VolumeChange(20)))",
+      "canonical_hash": "f9169c7f819e079cd74ebf35396e3441f62614b9883d92ea8faebefc63a14c5d",
+      "rationale": "Ranks stocks by the absolute 1\u2011day return change (capturing volatility spikes) and weights by cross\u2011sectional volume change, seeking assets where price swings are accompanied by strong volume, a proxy for informed trading.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_008",
+      "expression_string": "Subtract(ZScore(RollingStd(20)), ZScore(RollingMean(20)))",
+      "canonical_hash": "4d6d7e3ba33b9063524ddcd2eff31a251e4c2668dfcf92be5e898d53ad8d69e2",
+      "rationale": "Differences the standardized recent return volatility from the standardized recent average return, aiming to isolate securities with unusually high risk relative to their mean performance.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    }
+  ],
+  "rejected_proposals": [],
+  "output_filepath": "data\\agent\\research_rounds\\round_001.json"
+}

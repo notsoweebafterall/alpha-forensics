@@ -71,25 +71,66 @@ def run_walk_forward_validation(
     fold_metrics: List[Dict[str, Any]] = []
 
     # 3. Evaluate each development fold
+    #
+    # IMPLEMENTATION NOTE — Option A (required by primitive evaluation semantics):
+    #
+    # All rolling-window primitives (Momentum, RollingMean, RollingStd, RollingZScore,
+    # RollingRank, RealizedVolatility, Drawdown) are implemented via pandas .shift() or
+    # .rolling(), which produce NaN for the first (window-1) rows of whatever DataFrame
+    # they receive.  They do NOT look outside the supplied DataFrame's index.
+    #
+    # Consequence: if we built the panel only from val_range, Momentum(252) would produce
+    # NaN for the first 251 dates of val_range — no valid signal to score.
+    #
+    # Correct approach:
+    #   1. Evaluate the expression on a panel spanning [train_range[0], val_range[1]],
+    #      so that rolling primitives have their full lookback history available at the
+    #      start of val_range and produce valid, non-NaN signal values there.
+    #   2. Slice the resulting signal AND the panel's returns to [val_range[0], val_range[1]]
+    #      BEFORE computing economic_metrics / predictive_metrics.
+    #
+    # The reported fold Sharpe and IC therefore measure genuine out-of-fold performance:
+    # the expression was never fitted to val_range, and the metrics are computed only on
+    # dates within that unseen validation window.
     for fold in folds:
-        p_slice = dev_panel.prices.loc[fold.train_range[0] : fold.train_range[1]]
-        v_slice = dev_panel.volume.loc[fold.train_range[0] : fold.train_range[1]]
+        # Build a wide panel: history from train_range[0] through val_range[1]
+        # so that rolling primitives compute correctly at the start of val_range.
+        wide_p = dev_panel.prices.loc[fold.train_range[0] : fold.val_range[1]]
+        wide_v = dev_panel.volume.loc[fold.train_range[0] : fold.val_range[1]]
 
-        fold_panel = build_panel(
+        wide_panel = build_panel(
             tickers=dev_panel.universe,
             start_date=fold.train_range[0],
-            end_date=fold.train_range[1],
+            end_date=fold.val_range[1],
             missing_threshold=0.05,
-            prices_df=p_slice,
-            volume_df=v_slice,
+            prices_df=wide_p,
+            volume_df=wide_v,
         )
 
-        signal = expression.evaluate(fold_panel)
-        res = run_backtest(signal, fold_panel, backtest_config, cost_model)
+        # Evaluate expression on the full wide panel (train + embargo + val)
+        full_signal = expression.evaluate(wide_panel)
+
+        # Restrict both the signal and the panel slice to val_range only
+        # so that metrics are computed on the genuinely held-out validation window.
+        val_start, val_end = fold.val_range
+        val_signal = full_signal.loc[val_start:val_end]
+
+        val_p = dev_panel.prices.loc[val_start:val_end]
+        val_v = dev_panel.volume.loc[val_start:val_end]
+        val_panel = build_panel(
+            tickers=dev_panel.universe,
+            start_date=val_start,
+            end_date=val_end,
+            missing_threshold=0.05,
+            prices_df=val_p,
+            volume_df=val_v,
+        )
+
+        res = run_backtest(val_signal, val_panel, backtest_config, cost_model)
 
         econ = economic_metrics(res)
         pred = predictive_metrics(
-            signal, fold_panel, execution_lag_days=backtest_config.execution_lag_days
+            val_signal, val_panel, execution_lag_days=backtest_config.execution_lag_days
         )
 
         m = {**econ, **pred, "fold_id": fold.fold_id}

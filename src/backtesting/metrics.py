@@ -115,35 +115,66 @@ def predictive_metrics(
     fwd_returns = align_forward_returns(returns, execution_lag_days=execution_lag_days)
 
     common_dates = signal.index.intersection(fwd_returns.index)
-    ic_dict = {}
-    rank_ic_dict = {}
+    if common_dates.empty:
+        empty_ser = pd.Series(dtype=float)
+        return {
+            "ic_mean": 0.0,
+            "ic_std": 0.0,
+            "rank_ic_mean": 0.0,
+            "rank_ic_std": 0.0,
+            "ic_series": empty_ser,
+            "rank_ic_series": empty_ser,
+        }
 
-    for dt in common_dates:
-        sig_row = signal.loc[dt]
-        ret_row = fwd_returns.loc[dt]
+    sig = signal.loc[common_dates]
+    ret = fwd_returns.loc[common_dates]
 
-        # Valid mask: non-NaN in both signal and forward return
-        valid_mask = sig_row.notna() & ret_row.notna()
-        if valid_mask.sum() > 1:
-            s_valid = sig_row[valid_mask]
-            r_valid = ret_row[valid_mask]
+    # Valid mask for non-NaN in both signal and return
+    valid_mask = sig.notna() & ret.notna()
+    n_valid_per_row = valid_mask.sum(axis=1)
+    sufficient_mask = n_valid_per_row > 1
 
-            # Pearson IC
-            if s_valid.std() > 0 and r_valid.std() > 0:
-                p_corr = np.corrcoef(s_valid, r_valid)[0, 1]
-                ic_dict[dt] = p_corr
-            else:
-                ic_dict[dt] = np.nan
+    sig_valid = sig.where(valid_mask)
+    ret_valid = ret.where(valid_mask)
 
-            # Spearman Rank IC
-            s_corr, _ = spearmanr(s_valid, r_valid)
-            rank_ic_dict[dt] = s_corr
-        else:
-            ic_dict[dt] = np.nan
-            rank_ic_dict[dt] = np.nan
+    # 1. Vectorized Pearson IC
+    sig_mean = sig_valid.mean(axis=1)
+    ret_mean = ret_valid.mean(axis=1)
 
-    ic_series = pd.Series(ic_dict, name="ic").dropna()
-    rank_ic_series = pd.Series(rank_ic_dict, name="rank_ic").dropna()
+    sig_std = sig_valid.std(axis=1, ddof=1)
+    ret_std = ret_valid.std(axis=1, ddof=1)
+
+    valid_std_mask = sufficient_mask & (sig_std > 1e-8) & (ret_std > 1e-8)
+
+    sig_demean = sig_valid.sub(sig_mean, axis=0)
+    ret_demean = ret_valid.sub(ret_mean, axis=0)
+
+    cov = (sig_demean * ret_demean).sum(axis=1) / (n_valid_per_row - 1).replace(0, np.nan)
+    denom = sig_std * ret_std
+
+    ic_series = (cov / denom).where(valid_std_mask).dropna()
+    ic_series.name = "ic"
+
+    # 2. Vectorized Spearman Rank IC
+    sig_rank = sig_valid.rank(axis=1)
+    ret_rank = ret_valid.rank(axis=1)
+
+    sig_r_mean = sig_rank.mean(axis=1)
+    ret_r_mean = ret_rank.mean(axis=1)
+
+    sig_r_std = sig_rank.std(axis=1, ddof=1)
+    ret_r_std = ret_rank.std(axis=1, ddof=1)
+
+    valid_r_std_mask = sufficient_mask & (sig_r_std > 1e-8) & (ret_r_std > 1e-8)
+
+    sig_r_demean = sig_rank.sub(sig_r_mean, axis=0)
+    ret_r_demean = ret_rank.sub(ret_r_mean, axis=0)
+
+    cov_rank = (sig_r_demean * ret_r_demean).sum(axis=1) / (n_valid_per_row - 1).replace(0, np.nan)
+    denom_rank = sig_r_std * ret_r_std
+
+    rank_ic_series = (cov_rank / denom_rank).where(valid_r_std_mask).dropna()
+    rank_ic_series.name = "rank_ic"
 
     return {
         "ic_mean": float(ic_series.mean()) if not ic_series.empty else 0.0,

@@ -7,7 +7,7 @@ from typing import Any
 
 import alpha.primitives.inputs as inputs
 import alpha.primitives.operators as operators
-from .tree import Expression, Leaf, UnaryNode, BinaryNode
+from .tree import Expression, Leaf, UnaryNode, BinaryNode, ConstantNode
 
 
 def to_string(expression: Expression) -> str:
@@ -29,6 +29,16 @@ def _parse_ast_node(node: ast.AST) -> Expression:
     """Recursively parses AST node into Expression tree."""
     if isinstance(node, ast.Expression):
         return _parse_ast_node(node.body)
+
+    # Bare numeric literals in argument position (e.g. the "1" in Add(1, x))
+    # become ast.Constant or ast.UnaryOp(USub, ast.Constant) at the Python AST
+    # level.  Intercept them here and wrap in ConstantNode before the ast.Call
+    # guard fires so they round-trip cleanly.
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+        return ConstantNode(float(node.value))
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+        inner = _eval_ast_val(node.operand)
+        return ConstantNode(float(-inner))
 
     if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name):
         raise ValueError(f"Invalid expression AST node: {ast.dump(node)}")
@@ -111,6 +121,11 @@ def _parse_ast_node(node: ast.AST) -> Expression:
         left = _parse_ast_node(args[0])
         right = _parse_ast_node(args[1])
         return BinaryNode(operators.Divide(), left, right)
+
+    # 4. Explicit Constant node (for round-tripping Constant(value) strings)
+    elif func_name == "Constant":
+        value = _eval_ast_val(args[0])
+        return ConstantNode(float(value))
 
     else:
         raise ValueError(f"Unknown primitive or operator in expression: '{func_name}'")

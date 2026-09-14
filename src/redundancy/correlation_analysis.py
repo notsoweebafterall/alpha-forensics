@@ -257,10 +257,20 @@ def run_redundancy_analysis(
                 if apply_status_changes:
                     # Idempotency discipline: skip duplicate append if candidate is already INVALIDATED
                     if candidate_records[red_id].status != "INVALIDATED":
-                        reason = f"redundant with {representative}, corr={corr_val:.3f} (>= {correlation_threshold:.2f})"
+                        if pd.notna(corr_val) and corr_val >= correlation_threshold:
+                            reason = f"redundant with {representative}, corr={corr_val:.3f} (>= {correlation_threshold:.2f})"
+                            is_transitive = False
+                        else:
+                            display_corr = 0.0 if pd.isna(corr_val) else corr_val
+                            reason = (
+                                f"transitively redundant via cluster containing {representative}; "
+                                f"direct correlation to {representative} is {display_corr:.3f}, below threshold {correlation_threshold:.2f}"
+                            )
+                            is_transitive = True
                         metadata = {
                             "redundant_with": representative,
-                            "correlation": float(corr_val),
+                            "correlation": float(corr_val) if pd.notna(corr_val) else 0.0,
+                            "transitive": is_transitive,
                         }
                         try:
                             append_status_change(

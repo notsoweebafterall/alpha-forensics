@@ -13,7 +13,7 @@ def compute_canonical_string(expr: "Expression") -> str:  # type: ignore # noqa:
     Normalizes commutative operators (Add, Multiply) by sorting child hashes.
     Explicitly incorporates primitive and operator parameter values.
     """
-    from .tree import Leaf, UnaryNode, BinaryNode
+    from .tree import Leaf, UnaryNode, BinaryNode, ConstantNode
 
     if isinstance(expr, Leaf):
         params_json = json.dumps(expr.primitive.params_dict(), sort_keys=True)
@@ -34,6 +34,10 @@ def compute_canonical_string(expr: "Expression") -> str:  # type: ignore # noqa:
             left_str, right_str = sorted([left_str, right_str])
 
         return f"Binary:{expr.operator.__class__.__name__}:{op_params}({left_str},{right_str})"
+
+    elif isinstance(expr, ConstantNode):
+        # repr() preserves type distinction: int 1 → "1", float 1.0 → "1.0"
+        return f"Constant:{repr(expr.value)}"
 
     else:
         raise TypeError(f"Unknown expression node type: {type(expr)}")

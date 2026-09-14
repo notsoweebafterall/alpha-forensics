@@ -1,0 +1,333 @@
+{
+  "run_timestamp": "20260905T183742Z",
+  "population_size": 300,
+  "max_generations": 40,
+  "elite_fraction": 0.2,
+  "crossover_prob": 0.7,
+  "max_depth": 6,
+  "total_generations_run": 40,
+  "total_survivors_found": 0,
+  "survivors": [],
+  "generation_history": [
+    {
+      "generation": 1,
+      "best_fitness": 0.014604381350386874,
+      "mean_fitness": 0.002347752384116105,
+      "unique_hashes": 300,
+      "unique_behaviors": 220,
+      "passed_screen": 47
+    },
+    {
+      "generation": 2,
+      "best_fitness": 0.015050635009054616,
+      "mean_fitness": 0.0039057886234352855,
+      "unique_hashes": 300,
+      "unique_behaviors": 267,
+      "passed_screen": 101
+    },
+    {
+      "generation": 3,
+      "best_fitness": 0.016778863158322135,
+      "mean_fitness": 0.004924822020716221,
+      "unique_hashes": 300,
+      "unique_behaviors": 282,
+      "passed_screen": 142
+    },
+    {
+      "generation": 4,
+      "best_fitness": 0.016778863158322135,
+      "mean_fitness": 0.005725227973873226,
+      "unique_hashes": 300,
+      "unique_behaviors": 283,
+      "passed_screen": 169
+    },
+    {
+      "generation": 5,
+      "best_fitness": 0.016778863158322135,
+      "mean_fitness": 0.006511874775705113,
+      "unique_hashes": 300,
+      "unique_behaviors": 286,
+      "passed_screen": 183
+    },
+    {
+      "generation": 6,
+      "best_fitness": 0.016778863158322135,
+      "mean_fitness": 0.006855707448383385,
+      "unique_hashes": 300,
+      "unique_behaviors": 282,
+      "passed_screen": 185
+    },
+    {
+      "generation": 7,
+      "best_fitness": 0.016778863158322135,
+      "mean_fitness": 0.0074955232854841585,
+      "unique_hashes": 300,
+      "unique_behaviors": 291,
+      "passed_screen": 187
+    },
+    {
+      "generation": 8,
+      "best_fitness": 0.019897013876023197,
+      "mean_fitness": 0.008024694542343296,
+      "unique_hashes": 300,
+      "unique_behaviors": 279,
+      "passed_screen": 198
+    },
+    {
+      "generation": 9,
+      "best_fitness": 0.019897013876023197,
+      "mean_fitness": 0.008270839794573144,
+      "unique_hashes": 300,
+      "unique_behaviors": 279,
+      "passed_screen": 202
+    },
+    {
+      "generation": 10,
+      "best_fitness": 0.019897013876023197,
+      "mean_fitness": 0.008784970426421995,
+      "unique_hashes": 300,
+      "unique_behaviors": 284,
+      "passed_screen": 215
+    },
+    {
+      "generation": 11,
+      "best_fitness": 0.019897013876023197,
+      "mean_fitness": 0.00891265608552657,
+      "unique_hashes": 300,
+      "unique_behaviors": 284,
+      "passed_screen": 212
+    },
+    {
+      "generation": 12,
+      "best_fitness": 0.0207643710222285,
+      "mean_fitness": 0.009395814976389902,
+      "unique_hashes": 300,
+      "unique_behaviors": 289,
+      "passed_screen": 219
+    },
+    {
+      "generation": 13,
+      "best_fitness": 0.0207643710222285,
+      "mean_fitness": 0.009778609338984966,
+      "unique_hashes": 300,
+      "unique_behaviors": 288,
+      "passed_screen": 225
+    },
+    {
+      "generation": 14,
+      "best_fitness": 0.0207643710222285,
+      "mean_fitness": 0.01028471082299644,
+      "unique_hashes": 300,
+      "unique_behaviors": 292,
+      "passed_screen": 230
+    },
+    {
+      "generation": 15,
+      "best_fitness": 0.0207643710222285,
+      "mean_fitness": 0.010295993033503486,
+      "unique_hashes": 300,
+      "unique_behaviors": 290,
+      "passed_screen": 228
+    },
+    {
+      "generation": 16,
+      "best_fitness": 0.02135435862990259,
+      "mean_fitness": 0.010471074232236406,
+      "unique_hashes": 300,
+      "unique_behaviors": 291,
+      "passed_screen": 226
+    },
+    {
+      "generation": 17,
+      "best_fitness": 0.02135435862990259,
+      "mean_fitness": 0.010671475537925402,
+      "unique_hashes": 300,
+      "unique_behaviors": 289,
+      "passed_screen": 236
+    },
+    {
+      "generation": 18,
+      "best_fitness": 0.02135435862990259,
+      "mean_fitness": 0.011108821837278935,
+      "unique_hashes": 300,
+      "unique_behaviors": 292,
+      "passed_screen": 239
+    },
+    {
+      "generation": 19,
+      "best_fitness": 0.02135435862990259,
+      "mean_fitness": 0.011370566883462985,
+      "unique_hashes": 300,
+      "unique_behaviors": 290,
+      "passed_screen": 249
+    },
+    {
+      "generation": 20,
+      "best_fitness": 0.02135435862990259,
+      "mean_fitness": 0.011246040187025751,
+      "unique_hashes": 300,
+      "unique_behaviors": 291,
+      "passed_screen": 236
+    },
+    {
+      "generation": 21,
+      "best_fitness": 0.02135435862990259,
+      "mean_fitness": 0.010952707688055776,
+      "unique_hashes": 300,
+      "unique_behaviors": 291,
+      "passed_screen": 229
+    },
+    {
+      "generation": 22,
+      "best_fitness": 0.02135435862990259,
+      "mean_fitness": 0.011611723745852823,
+      "unique_hashes": 300,
+      "unique_behaviors": 291,
+      "passed_screen": 233
+    },
+    {
+      "generation": 23,
+      "best_fitness": 0.025503298844433593,
+      "mean_fitness": 0.011260737761038787,
+      "unique_hashes": 300,
+      "unique_behaviors": 288,
+      "passed_screen": 221
+    },
+    {
+      "generation": 24,
+      "best_fitness": 0.025503298844433593,
+      "mean_fitness": 0.012235110381020998,
+      "unique_hashes": 300,
+      "unique_behaviors": 296,
+      "passed_screen": 243
+    },
+    {
+      "generation": 25,
+      "best_fitness": 0.025503298844433593,
+      "mean_fitness": 0.012155273873572847,
+      "unique_hashes": 300,
+      "unique_behaviors": 290,
+      "passed_screen": 230
+    },
+    {
+      "generation": 26,
+      "best_fitness": 0.025503298844433593,
+      "mean_fitness": 0.011922859262277024,
+      "unique_hashes": 300,
+      "unique_behaviors": 291,
+      "passed_screen": 229
+    },
+    {
+      "generation": 27,
+      "best_fitness": 0.025503298844433593,
+      "mean_fitness": 0.012130455920422266,
+      "unique_hashes": 300,
+      "unique_behaviors": 294,
+      "passed_screen": 236
+    },
+    {
+      "generation": 28,
+      "best_fitness": 0.025503298844433593,
+      "mean_fitness": 0.012174191944713657,
+      "unique_hashes": 300,
+      "unique_behaviors": 292,
+      "passed_screen": 240
+    },
+    {
+      "generation": 29,
+      "best_fitness": 0.025503298844433593,
+      "mean_fitness": 0.012299082341123604,
+      "unique_hashes": 300,
+      "unique_behaviors": 289,
+      "passed_screen": 232
+    },
+    {
+      "generation": 30,
+      "best_fitness": 0.025503298844433593,
+      "mean_fitness": 0.012589027469119086,
+      "unique_hashes": 300,
+      "unique_behaviors": 294,
+      "passed_screen": 238
+    },
+    {
+      "generation": 31,
+      "best_fitness": 0.025503298844433593,
+      "mean_fitness": 0.013445969214624617,
+      "unique_hashes": 300,
+      "unique_behaviors": 287,
+      "passed_screen": 246
+    },
+    {
+      "generation": 32,
+      "best_fitness": 0.025503298844433593,
+      "mean_fitness": 0.013431699104266238,
+      "unique_hashes": 300,
+      "unique_behaviors": 291,
+      "passed_screen": 244
+    },
+    {
+      "generation": 33,
+      "best_fitness": 0.025503298844433593,
+      "mean_fitness": 0.014054289531368553,
+      "unique_hashes": 300,
+      "unique_behaviors": 294,
+      "passed_screen": 249
+    },
+    {
+      "generation": 34,
+      "best_fitness": 0.025503298844433593,
+      "mean_fitness": 0.014010176595934306,
+      "unique_hashes": 300,
+      "unique_behaviors": 289,
+      "passed_screen": 253
+    },
+    {
+      "generation": 35,
+      "best_fitness": 0.025503298844433593,
+      "mean_fitness": 0.013893671058004833,
+      "unique_hashes": 300,
+      "unique_behaviors": 292,
+      "passed_screen": 246
+    },
+    {
+      "generation": 36,
+      "best_fitness": 0.025503298844433593,
+      "mean_fitness": 0.0148814369861524,
+      "unique_hashes": 300,
+      "unique_behaviors": 293,
+      "passed_screen": 253
+    },
+    {
+      "generation": 37,
+      "best_fitness": 0.025503298844433593,
+      "mean_fitness": 0.014855454926778608,
+      "unique_hashes": 300,
+      "unique_behaviors": 292,
+      "passed_screen": 246
+    },
+    {
+      "generation": 38,
+      "best_fitness": 0.0262184459963951,
+      "mean_fitness": 0.015109482267656658,
+      "unique_hashes": 300,
+      "unique_behaviors": 293,
+      "passed_screen": 250
+    },
+    {
+      "generation": 39,
+      "best_fitness": 0.0262184459963951,
+      "mean_fitness": 0.01493182394266105,
+      "unique_hashes": 300,
+      "unique_behaviors": 287,
+      "passed_screen": 254
+    },
+    {
+      "generation": 40,
+      "best_fitness": 0.0262184459963951,
+      "mean_fitness": 0.015880179277904437,
+      "unique_hashes": 300,
+      "unique_behaviors": 293,
+      "passed_screen": 257
+    }
+  ]
+}

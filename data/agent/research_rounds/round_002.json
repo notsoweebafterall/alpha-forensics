@@ -1,0 +1,75 @@
+{
+  "round_number": 2,
+  "timestamp": "2026-09-03T16:49:29.321148",
+  "num_requested": 8,
+  "history_summary": "Historical Trial Summary (Total Trials Logged: 91, Active Effective: 91):\n\nTop Evaluated Candidates & Outcomes:\n  - ID: volatility_adjusted_momentum__sector_Healthcare | Phase: Phase 11 Generalization Sector      | OOS Sharpe:  1.6667 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: cross_sectional_momentum__param_lookback_20__sector_Industrials | Phase: Phase 11 Generalization Sector      | OOS Sharpe:  1.5757 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: generated_ea0f73165f4c                   | Phase: Phase 6->7 Compositional Validation | OOS Sharpe:  1.5312 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: generated_52509e154753                   | Phase: Phase 6->7 Compositional Validation | OOS Sharpe:  1.5064 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: generated_52509e154753__cost_10bps       | Phase: Phase 8 Cost Sensitivity            | OOS Sharpe:  1.3927 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: generated_ea0f73165f4c__cost_10bps       | Phase: Phase 8 Cost Sensitivity            | OOS Sharpe:  1.2103 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: cross_sectional_momentum__param_lookback_20__period_h1 | Phase: Phase 11 Generalization Period H1   | OOS Sharpe:  0.7050 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: cross_sectional_momentum__param_lookback_20__sector_Energy | Phase: Phase 11 Generalization Sector      | OOS Sharpe:  0.6348 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: volatility_adjusted_momentum__sector_Consumer Staples | Phase: Phase 11 Generalization Sector      | OOS Sharpe:  0.5377 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: volatility_adjusted_momentum__period_h1  | Phase: Phase 11 Generalization Period H1   | OOS Sharpe:  0.4905 | DSR=0.0000 (fails_dsr) | Status: VALID\n\nKey Research Directives:\n  - Pure momentum (PriceReturn/Momentum) often fails DSR or factor tests when unadjusted.\n  - RealizedVolatility long-high-vol candidates load heavily on the VOL factor.\n  - Search for non-linear combinations (VolumeChange, Turnover, Drawdown, ZScore, Rank) with robust risk controls.",
+  "accepted_proposals": [
+    {
+      "proposal_id": "proposal_001",
+      "expression_string": "Rank(Multiply(Momentum(20), ZScore(VolumeChange(5))))",
+      "canonical_hash": "08d7e2047f669f7a9353a854831b797bbb403e84eca9cb1ac4b9d0c992f864fd",
+      "rationale": "Ranks stocks by momentum strength amplified by recent volume expansion, isolating assets with both price upside and institutional buying pressure.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_002",
+      "expression_string": "SignedPower(Subtract(RollingMean(20), RollingStd(20)), 0.5)",
+      "canonical_hash": "c5906298cb844cf737337649b0b69fe31d405af7075e90535e3fbddb398bdc13",
+      "rationale": "Computes the square\u2011root of the excess of recent average return over its volatility; a higher value suggests a favorable risk\u2011adjusted trend.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_004",
+      "expression_string": "Multiply(Negate(Rank(PriceReturn(1))), ZScore(Turnover(20)))",
+      "canonical_hash": "31ed7eb167a96664bbdaf9f1ee2426866d494686a3f62e6a2274dc63e349d5a9",
+      "rationale": "Short\u2011term losers (negative rank of one\u2011day return) that exhibit high dollar turnover are emphasized, capturing potential mean\u2011reversion driven by strong liquidity.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_005",
+      "expression_string": "Add(RollingZScore(10), Lag(RollingRank(20), 5))",
+      "canonical_hash": "e49f3a7557fb8cb92c4ca8585388f986ecfb2c60eb6f222e762da5e74786c245",
+      "rationale": "Combines a short\u2011term time\u2011series Z\u2011score with a lagged percentile rank, blending momentum persistence with a delayed ranking signal.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_006",
+      "expression_string": "Multiply(Rank(Multiply(Momentum(60), SignedPower(VolumeChange(20), 2.0))), ZScore(RealizedVolatility(20)))",
+      "canonical_hash": "755bfa15b84657ff54e7056d8c2df412cbb2271afeab39b64104a04820bfbaa6",
+      "rationale": "Ranks stocks by long\u2011term momentum weighted by the square of volume change, then scales by cross\u2011sectional volatility; aims to capture high\u2011conviction moves with controlled risk.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_007",
+      "expression_string": "Subtract(Rank(Abs(Diff(PriceReturn(5), 1))), RollingStd(60))",
+      "canonical_hash": "50480139a391ceb8071e9d0cd90f76faf343596c2bb5e842e76270af242eb354",
+      "rationale": "Ranks assets by the absolute 5\u2011day return change (diff) to capture volatility bursts, then subtracts long\u2011term return volatility to favor stable breakouts.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    }
+  ],
+  "rejected_proposals": [
+    {
+      "proposal_id": "proposal_003",
+      "expression_string": "Divide(Rank(Drawdown(20)), Add(1, RealizedVolatility(60)))",
+      "canonical_hash": "",
+      "rationale": "Ranks assets by recent drawdown severity but penalizes those with high realized volatility, favoring deep recoveries in low\u2011risk environments.",
+      "status": "REJECTED",
+      "rejection_reason": "parse_error: Invalid expression AST node: Constant(value=1)"
+    },
+    {
+      "proposal_id": "proposal_008",
+      "expression_string": "Divide(Multiply(RollingRank(20), SignedPower(PriceReturn(10), 2.0)), Add(1, Drawdown(60)))",
+      "canonical_hash": "",
+      "rationale": "Weights recent percentile rank by the squared 10\u2011day return, normalizing by 1 plus long\u2011term drawdown to prioritize strong performers that have recovered from past declines.",
+      "status": "REJECTED",
+      "rejection_reason": "parse_error: Invalid expression AST node: Constant(value=1)"
+    }
+  ],
+  "output_filepath": "data\\agent\\research_rounds\\round_002.json"
+}

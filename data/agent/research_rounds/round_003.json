@@ -1,0 +1,74 @@
+{
+  "round_number": 3,
+  "timestamp": "2026-09-03T16:50:01.151992",
+  "num_requested": 8,
+  "history_summary": "Historical Trial Summary (Total Trials Logged: 91, Active Effective: 91):\n\nTop Evaluated Candidates & Outcomes:\n  - ID: volatility_adjusted_momentum__sector_Healthcare | Phase: Phase 11 Generalization Sector      | OOS Sharpe:  1.6667 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: cross_sectional_momentum__param_lookback_20__sector_Industrials | Phase: Phase 11 Generalization Sector      | OOS Sharpe:  1.5757 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: generated_ea0f73165f4c                   | Phase: Phase 6->7 Compositional Validation | OOS Sharpe:  1.5312 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: generated_52509e154753                   | Phase: Phase 6->7 Compositional Validation | OOS Sharpe:  1.5064 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: generated_52509e154753__cost_10bps       | Phase: Phase 8 Cost Sensitivity            | OOS Sharpe:  1.3927 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: generated_ea0f73165f4c__cost_10bps       | Phase: Phase 8 Cost Sensitivity            | OOS Sharpe:  1.2103 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: cross_sectional_momentum__param_lookback_20__period_h1 | Phase: Phase 11 Generalization Period H1   | OOS Sharpe:  0.7050 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: cross_sectional_momentum__param_lookback_20__sector_Energy | Phase: Phase 11 Generalization Sector      | OOS Sharpe:  0.6348 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: volatility_adjusted_momentum__sector_Consumer Staples | Phase: Phase 11 Generalization Sector      | OOS Sharpe:  0.5377 | DSR=0.0000 (fails_dsr) | Status: VALID\n  - ID: volatility_adjusted_momentum__period_h1  | Phase: Phase 11 Generalization Period H1   | OOS Sharpe:  0.4905 | DSR=0.0000 (fails_dsr) | Status: VALID\n\nKey Research Directives:\n  - Pure momentum (PriceReturn/Momentum) often fails DSR or factor tests when unadjusted.\n  - RealizedVolatility long-high-vol candidates load heavily on the VOL factor.\n  - Search for non-linear combinations (VolumeChange, Turnover, Drawdown, ZScore, Rank) with robust risk controls.",
+  "accepted_proposals": [
+    {
+      "proposal_id": "proposal_001",
+      "expression_string": "Rank(Divide(Momentum(20), RealizedVolatility(20)))",
+      "canonical_hash": "ae1561d77087be3dad9e0133caafb7810e039ebbaa483d6f6c113feaf77012a5",
+      "rationale": "Ranks stocks by momentum scaled by recent volatility, aiming to capture risk\u2011adjusted trend strength while damping high\u2011volatility noise.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_002",
+      "expression_string": "Rank(Multiply(Drawdown(20), VolumeChange(5)))",
+      "canonical_hash": "cae1190e5fc8893117358b1f89b55ec3b8d573b4af95c78cab187c5c3951ea7a",
+      "rationale": "Combines recent peak\u2011to\u2011trough drawdown with short\u2011term volume surge; a large negative drawdown with rising volume may signal capitulation followed by buying pressure.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_003",
+      "expression_string": "Lag(ZScore(RollingZScore(20)), 1)",
+      "canonical_hash": "943ec0ba2bd555704a4a753046fcac73b8004a487ca46ea26b61c9e7565df6b3",
+      "rationale": "Applies a one\u2011day lag to the cross\u2011sectional Z\u2011score of a 20\u2011day return Z\u2011score, seeking a delayed reaction to short\u2011term return anomalies.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_004",
+      "expression_string": "Rank(SignedPower(Diff(PriceReturn(5), 1), 0.5))",
+      "canonical_hash": "77e8af20794a1b2a6eaff79e75c8afde22d2cd2b361d486a5da4f1d9cfdc5520",
+      "rationale": "Ranks the concave (square\u2011root) transformation of the 5\u2011day price\u2011return change, emphasizing modest moves while preserving sign to capture early trend shifts.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_005",
+      "expression_string": "Rank(Multiply(Rank(Turnover(20)), Momentum(60)))",
+      "canonical_hash": "2bfea2568b2315a62b1f1b5aca501c20a321d5c50a1bb51611c19ae50fa425df",
+      "rationale": "Multiplies a cross\u2011sectional turnover rank (proxy for liquidity and institutional interest) by 60\u2011day momentum, then ranks the product to isolate high\u2011flow, trending stocks.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_006",
+      "expression_string": "Rank(Abs(Subtract(RollingMean(10), PriceReturn(1))))",
+      "canonical_hash": "13901b3fb142e48d12a8ce37fe9ea0311c34e54494158c5d477a436084222c24",
+      "rationale": "Measures the absolute deviation of the latest daily return from its 10\u2011day average, ranking stocks where recent performance diverges sharply from short\u2011term trend, a potential reversal signal.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_007",
+      "expression_string": "Rank(Divide(Rank(PriceReturn(1)), RealizedVolatility(20)))",
+      "canonical_hash": "c382ff061829db5c0afb4ee61490677aa8e6c748d025dfdc798700fbacb3fa25",
+      "rationale": "Scales the cross\u2011sectional rank of the most recent daily return by recent volatility, rewarding high\u2011return, low\u2011volatility stocks.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    },
+    {
+      "proposal_id": "proposal_008",
+      "expression_string": "Rank(Lag(ZScore(Drawdown(60)), 5))",
+      "canonical_hash": "dc261e863dd8601a2ffaeca1d9c86ed16f52589502516440840e4cc101b24465",
+      "rationale": "Applies a five\u2011day lag to the cross\u2011sectional Z\u2011score of a 60\u2011day drawdown, targeting stocks that experienced deep drawdowns earlier and may be entering a recovery phase.",
+      "status": "ACCEPTED",
+      "rejection_reason": null
+    }
+  ],
+  "rejected_proposals": [],
+  "output_filepath": "data\\agent\\research_rounds\\round_003.json"
+}

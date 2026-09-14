@@ -23,10 +23,14 @@ class FactorExposureResult:
     betas: Dict[str, float]
     t_stats: Dict[str, float]
     r_squared: float
-    residual_sharpe: float
+    residual_sharpe: float  # Annualized alpha coefficient (Intercept * 252)
     raw_sharpe: float
     factor_correlations: Dict[str, float]
     verdict: str  # "distinct_alpha", "factor_repackaging", or "unprofitable"
+    alpha_daily: float = 0.0
+    alpha_annualized: float = 0.0
+    alpha_t_stat: float = 0.0
+    alpha_significant: bool = False
 
 
 def run_factor_regression(
@@ -49,8 +53,8 @@ def run_factor_regression(
 
     Verdict Classification:
         - "unprofitable": If raw_sharpe <= 0.0 (no positive alpha to decompose).
-        - "distinct_alpha": If raw_sharpe > 0.0, R^2 < 0.5, and residual_sharpe >= 0.5 * raw_sharpe.
-        - "factor_repackaging": If raw_sharpe > 0.0, but R^2 >= 0.5 or residual_sharpe < 0.5 * raw_sharpe.
+        - "distinct_alpha": If raw_sharpe > 0.0, R^2 < 0.5, alpha_daily > 0, and alpha_t_stat >= 1.96.
+        - "factor_repackaging": If raw_sharpe > 0.0, but R^2 >= 0.5 or alpha is not statistically significant.
 
     Args:
         candidate_returns: Daily returns of candidate strategy.
@@ -60,7 +64,7 @@ def run_factor_regression(
         nw_lags: Number of lags for Newey-West HAC covariance matrix (default 5).
 
     Returns:
-        FactorExposureResult: OLS betas, HAC t-stats, R^2, residual Sharpe, raw Sharpe, and verdict.
+        FactorExposureResult: OLS betas, HAC t-stats, R^2, Intercept alpha, raw Sharpe, and verdict.
     """
     if candidate_sectors is None or len(candidate_sectors) == 0:
         raise ValueError(
@@ -116,9 +120,6 @@ def run_factor_regression(
     r_squared = float(1.0 - (ss_res / ss_tot)) if ss_tot > 0 else 0.0
 
     # 6. Compute Newey-West (HAC) Variance-Covariance Matrix.
-    # Use Moore-Penrose pseudoinverse (pinv) instead of inv to gracefully handle
-    # rank-deficient design matrices (e.g. constant factor columns dropped above
-    # still leave near-singular XtX when N is very small relative to K).
     xtx_inv = np.linalg.pinv(X_mat.T @ X_mat)
 
     # S_0 term
@@ -142,28 +143,27 @@ def run_factor_regression(
 
     var_hac = xtx_inv @ S_hac @ xtx_inv
 
-    # 7. Compute t-statistics
+    # 7. Compute t-statistics & Intercept Alpha
     se_hac = np.sqrt(np.maximum(1e-12, np.diag(var_hac)))
     t_stats_arr = betas_arr / se_hac
 
     betas_dict = {name: float(betas_arr[i]) for i, name in enumerate(feature_names)}
     t_stats_dict = {name: float(t_stats_arr[i]) for i, name in enumerate(feature_names)}
 
-    # 8. Compute residual Sharpe & raw Sharpe (annualized)
-    res_mean = float(np.mean(residuals))
-    res_std = float(np.std(residuals, ddof=1))
-    residual_sharpe = (res_mean / res_std) * math.sqrt(252.0) if res_std > 1e-8 else 0.0
+    alpha_daily = float(betas_arr[0])
+    alpha_annualized = alpha_daily * 252.0
+    alpha_t_stat = float(t_stats_arr[0])
+    alpha_significant = abs(alpha_t_stat) >= 1.96
 
     raw_mean = float(np.mean(y_arr))
     raw_std = float(np.std(y_arr, ddof=1))
     raw_sharpe = (raw_mean / raw_std) * math.sqrt(252.0) if raw_std > 1e-8 else 0.0
 
-    # 9. Evaluate Three-Way Alpha Verdict
-    # Explicit Guard: If raw_sharpe <= 0, there is no positive alpha to be "distinct" from factor exposure.
-    # The strategy never worked / is unprofitable.
+    # 8. Evaluate Three-Way Alpha Verdict
+    # Explicit Guard: If raw_sharpe <= 0, there is no positive alpha to decompose.
     if raw_sharpe <= 0.0:
         verdict = "unprofitable"
-    elif raw_sharpe > 0.0 and r_squared < 0.5 and (residual_sharpe >= 0.5 * raw_sharpe):
+    elif r_squared < 0.5 and alpha_significant and alpha_daily > 0.0:
         verdict = "distinct_alpha"
     else:
         verdict = "factor_repackaging"
@@ -173,8 +173,12 @@ def run_factor_regression(
         betas=betas_dict,
         t_stats=t_stats_dict,
         r_squared=r_squared,
-        residual_sharpe=residual_sharpe,
+        residual_sharpe=alpha_annualized,
         raw_sharpe=raw_sharpe,
         factor_correlations=correlations,
         verdict=verdict,
+        alpha_daily=alpha_daily,
+        alpha_annualized=alpha_annualized,
+        alpha_t_stat=alpha_t_stat,
+        alpha_significant=alpha_significant,
     )

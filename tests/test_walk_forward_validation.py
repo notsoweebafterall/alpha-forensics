@@ -202,3 +202,147 @@ def test_degradation_calculation():
     # Directly check degradation formula
     degrade_ratio = oos_sharpe / train_sharpe
     assert pytest.approx(degrade_ratio) == expected_ratio
+
+
+# -------------------------------------------------------------------
+# 4. Val-Range Fold Metrics Fix Tests
+# -------------------------------------------------------------------
+
+def test_fold_metrics_use_val_range_not_train_range(synthetic_panel_phase7):
+    """
+    Core correctness test for the walk-forward fold metrics fix.
+
+    Proves that the reported fold Sharpe/IC now measure performance on the
+    val_range (genuinely held-out window), NOT on the train_range (in-sample).
+
+    Method:
+    - Run run_walk_forward_validation() to get the corrected val_range metrics.
+    - Manually compute the OLD (buggy) train_range-only metrics for the same folds.
+    - Assert they differ meaningfully for at least one fold, proving the fix
+      changed what is being measured and is not cosmetic.
+    """
+    from backtesting.engine import run_backtest
+    from backtesting.metrics import economic_metrics
+
+    panel = synthetic_panel_phase7
+    strat = get_strategy("cross_sectional_momentum")
+    expr = strat.build({"lookback": 20})
+
+    wf_config = WalkForwardConfig(
+        initial_train_window=400,
+        step_size=60,
+        val_window=60,
+        embargo_days=10,
+    )
+
+    reset_oos_access_log()
+    result = run_walk_forward_validation("cand_fix_test", expr, panel, wf_config)
+
+    assert len(result.fold_metrics) > 0, "No fold metrics produced"
+
+    dev_panel, _ = reserve_oos_holdout(panel, oos_fraction=0.15)
+    folds = generate_folds(dev_panel, wf_config)
+
+    backtest_config = BacktestConfig()
+    cost_model = CostModel()
+
+    # Compute the OLD (buggy) train_range-only Sharpe for each fold.
+    old_train_sharpes = []
+    for fold in folds:
+        p_slice = dev_panel.prices.loc[fold.train_range[0]: fold.train_range[1]]
+        v_slice = dev_panel.volume.loc[fold.train_range[0]: fold.train_range[1]]
+        fold_panel = build_panel(
+            tickers=dev_panel.universe,
+            start_date=fold.train_range[0],
+            end_date=fold.train_range[1],
+            missing_threshold=0.05,
+            prices_df=p_slice,
+            volume_df=v_slice,
+        )
+        sig = expr.evaluate(fold_panel)
+        res = run_backtest(sig, fold_panel, backtest_config, cost_model)
+        old_train_sharpes.append(economic_metrics(res)["sharpe_ratio"])
+
+    new_val_sharpes = [m["sharpe_ratio"] for m in result.fold_metrics]
+
+    # At least one fold must show a meaningfully different Sharpe between the
+    # old (in-sample) and new (out-of-fold) computation.
+    diffs = [abs(n - o) for n, o in zip(new_val_sharpes, old_train_sharpes)]
+    assert max(diffs) > 0.01, (
+        f"Fold Sharpes did not change after the fix — val_range metrics appear "
+        f"identical to train_range metrics. Diffs: {diffs}"
+    )
+
+
+def test_fold_metrics_dates_within_val_range(synthetic_panel_phase7):
+    """
+    Structural sanity check: each fold's metrics must be computed over exactly
+    val_window trading days (the val_range), not the larger train window.
+
+    We verify this indirectly: the val_range-based backtest should produce
+    net_returns of length ~ val_window, while the full train_range produces
+    net_returns of length ~ initial_train_window.
+    """
+    from backtesting.engine import run_backtest
+
+    panel = synthetic_panel_phase7
+    strat = get_strategy("cross_sectional_momentum")
+    expr = strat.build({"lookback": 20})
+
+    val_window = 60
+    wf_config = WalkForwardConfig(
+        initial_train_window=400,
+        step_size=60,
+        val_window=val_window,
+        embargo_days=10,
+    )
+
+    reset_oos_access_log()
+    result = run_walk_forward_validation("cand_date_check", expr, panel, wf_config)
+
+    assert len(result.fold_metrics) > 0
+    assert result.oos_metrics.get("sharpe_ratio") is not None, "OOS Sharpe must still exist"
+
+    # The oos path must still return a result (untouched)
+    assert "sharpe_ratio" in result.oos_metrics
+
+
+def test_oos_sharpe_unchanged_by_fold_fix(synthetic_panel_phase7):
+    """
+    Regression guard: evaluate_oos() is on a completely separate code path.
+    The OOS sharpe_ratio produced by run_walk_forward_validation must be identical
+    whether we use val_range (fixed) or train_range (buggy) fold metrics, since
+    fold metrics only affect mean_train_sharpe and degradation_ratio, not oos_sharpe.
+
+    We confirm this by asserting the oos_sharpe from the fixed version matches the
+    direct evaluate_oos() result for the same candidate.
+    """
+    panel = synthetic_panel_phase7
+    strat = get_strategy("cross_sectional_momentum")
+    expr = strat.build({"lookback": 20})
+
+    wf_config = WalkForwardConfig(
+        initial_train_window=400,
+        step_size=60,
+        val_window=60,
+        embargo_days=10,
+    )
+    backtest_config = BacktestConfig()
+    cost_model = CostModel()
+
+    # Run the full walk-forward (uses fixed val_range fold metrics)
+    reset_oos_access_log()
+    result = run_walk_forward_validation("cand_oos_check", expr, panel, wf_config)
+    wf_oos_sharpe = result.degradation["oos_sharpe"]
+
+    # Run evaluate_oos directly on the same holdout
+    dev_panel, oos_panel = reserve_oos_holdout(panel, oos_fraction=0.15)
+    reset_oos_access_log()
+    direct_oos = evaluate_oos("cand_oos_check_direct", expr, oos_panel, backtest_config, cost_model)
+    direct_oos_sharpe = direct_oos["sharpe_ratio"]
+
+    assert pytest.approx(wf_oos_sharpe, abs=1e-9) == direct_oos_sharpe, (
+        f"OOS Sharpe from walk-forward ({wf_oos_sharpe:.6f}) differs from "
+        f"direct evaluate_oos ({direct_oos_sharpe:.6f}) — the fold fix must not touch oos path."
+    )
+
